@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script> 
+    
+	<link href="hw08.css" rel="stylesheet"/>
+    <script src="hw08.js"></script>
+    
+    <script src="http://openlayers.org/api/OpenLayers.js"></script>
+ 
+</head>
+    
+<body>    
+    <script>
+      function statusChangeCallback(response) {
+        //console.log('statusChangeCallback');
+        //console.log(response);
+        // The response object is returned with a status field that lets the
+        // app know the current login status of the person.
+        // Full docs on the response object can be found in the documentation
+        // for FB.getLoginStatus().
+        if (response.status === 'connected') {
+          // Logged into your app and Facebook.
+          fbpost();
+          //alert('status === "connected"');
+        } else if (response.status === 'not_authorized') {
+          // The person is logged into Facebook, but not your app.
+          // document.getElementById('status').innerHTML = 'Please log ' + 'into this app.';
+          //fblogin();
+          //alert('not_authorized');
+          fbpost();    
+        } else {
+          // The person is not logged into Facebook, so we're not sure if
+          // they are logged into this app or not.
+          //document.getElementById('status').innerHTML = 'Please log ' + 'into Facebook.';
+          fblogin();
+        }
+      }
+
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId      : '922645191149010',
+          xfbml      :  true,
+          version    : 'v2.5'
+        });
+      };
+
+      (function(d, s, id){
+         var js, fjs = d.getElementsByTagName(s)[0];
+         if (d.getElementById(id)) {return;}
+         js = d.createElement(s); js.id = id;
+         js.src = "//connect.facebook.net/en_US/sdk.js";
+         fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+
+
+
+      function checkLoginState() {
+        FB.getLoginStatus(function(response) {
+          statusChangeCallback(response);
+        });
+      }
+        
+      function fbpost(){      
+          FB.ui(
+                  {
+                    method: 'feed',
+                    'link': 'http://forecast.io/',
+                    'picture': 'http://cs-server.usc.edu:29158/hw-8/'+wicon,
+                    'name': 'Current Weather in '+input_city+', '+input_state,
+                    'caption': 'WEATHER INFORMATION FROM FORECAST.IO',
+                    'description': summary+', '+currentTempVal,   
+                     href: 'http://forecast.io/'
+                  },
+                 
+                  function(response) {
+                    if (response && !response.error_message) {
+                      alert('Posted Successfully.');
+                    } else {
+                      alert('Not Posted');
+                    }
+                  }
+             );     
+      }
+        
+
+      function fblogin() {
+          FB.login(function(response) {
+            if (response.authResponse) {
+             //console.log('Welcome!  Fetching your information.... ');
+             /*FB.api('/me', function(response) {
+               console.log('Good to see you, ' + response.name + '.');
+             });*/
+            
+             fbpost();    
+                
+             //alert('fblogin true');
+          } else {
+             //console.log('User cancelled login or did not fully authorize.');
+             //alert('fblogin false');
+            }
+          });
+      }
+  </script>
+    
+    <div class="container-fluid" id="container_all_result" style="padding-bottom:20px;">
+         
+      <div id="search_form" class="search-form-margin centered">
+        <h2 align="center"> Forecast Search</h2>   
+        <div class="col-sm-12" style="background: rgba(0, 0, 0, 0.1); padding-right:1px; padding-left:1px;">    
+                        
+        <form  method="POST" role="form" onsubmit="return validate_form_input(this)" style="padding-top:2px;">                
+              
+        <div class="col-sm-6">   
+            <div id="streetName" class="form-group col-sm-5" style="padding-right:2px;padding-left:0px;">                                    
+                <div class="search-form-label-color search-form-text "> Street Address:<span class="search-form-required-color">*</span></div>
+                <input type="text" name="street_name" id="street_name" class="form-control search-form-text" placeholder="Enter street address"/>
+                
+                <div><span id="error_street" class="search-form-error-color search-form-text"> </span></div>
+            </div>
+            
+            <div id="cityName" class="form-group col-sm-4 col-offset-sm-5" style="padding-right:2px; padding-left:0px;">
+                <div class="search-form-label-color search-form-text "> City:<span class="search-form-required-color">*</span></div>
+                <input type="text" name="city_name" id="city_name" class="form-control search-form-text " placeholder="Enter the city name"/> 
+                <div><span id="error_city" class="search-form-error-color search-form-text"> </span></div>
+            </div>
+            
+            <div id="stateName" class="form-group col-sm-3 col-offset-sm-9" style="padding-left:0px; padding-right:0px;">
+                <div class="search-form-label-color search-form-text"> State:<span class="search-form-required-color">*</span></div>                
+                 <select name="state_name" id="state_name" class="form-control search-form-text" value="Select_your_State"> 
+                 <option value="" default selected style="color:grey">Select your state...</option>
+                               
+                 </select> 
+                 
+                 <script type="text/javascript">generateSelect()</script>
+                 <div><span id="error_state" class="search-form-error-color search-form-text"></span></div>
+            </div>   
+        </div>
+               
+         <div class="col-sm-6 col-offset-sm-6">   
+                <div id="form_degree" class="form-group col-sm-6" style="padding-right:1px; padding-left:0px; padding-top:6px;">
+                   
+                    <div class="search-form-label-color search-form-text"> Degree:<span class="search-form-required-color">*</span></div>
+
+                    <input type="radio" name="temperature_unit" id="fahrenheit" value="fahrenheit" checked="checked">
+                    <span class="search-form-label-color search-form-text-degree">Fahrenheit</span>&nbsp;&nbsp;
+
+                    <input type="radio" name="temperature_unit" id="celcius" value="celcius">
+                    <span class="search-form-label-color search-form-text-degree">Celcius</span>
+
+                </div>
+
+                <div class="form-group col-sm-6" >
+                    <br>
+                    <div class="row" align="right">
+                        <button type="submit" class="btn btn-primary btn-responsive search-form-button-text glyphicon glyphicon-search">&nbsp;Search</button>
+                        <button type="reset"  class="btn btn-default btn-responsive search-form-button-text glyphicon glyphicon-refresh" onclick="clear_location()">&nbsp;Clear</button>
+                    </div> 
+
+                    <br>   
+
+                    <div class="row" align="right">
+                           <span class="search-form-label-color search-form-forecast-text">Powered By:</span><a href=" http://forecast.io"><img src="images/forecast_logo.png" id="img_forecast"></a> 
+                    </div>                
+                </div>
+            </div>  
+        </form>
+       </div>     
+        <div class="col-xs-12" style="background:#FFFAF0; margin-top:1%; margin-bottom:1%;"></div>    
+    </div>
+    
+    
+    
+        
+    <div id="weather_result" class="search-form-margin centered">   
+        
+            <ul class="nav nav-tabs right-to-left"  id="tab-all">
+              <li class="active"><a href="#right-now" data-toggle="tab">Right Now</a></li>
+              <li><a href="#next-24-hours" data-toggle="tab">Next 24 Hours</a></li>
+              <li><a href="#next-7-days" data-toggle="tab">Next 7 Days</a></li>
+            </ul>
+        
+        
+        <div class="tab-content my-tab">            
+            
+            <div class="tab-pane active" id="right-now">
+                               
+                     <div class="col-sm-6">
+                       
+                         <div class="row" id="right_now_heading" style=" background-color: #FA8072; position:relative">                         
+                                <div class="col-sm-6" id="today_weather_image">                                   
+                                    <img id="img_today_weather">
+                                </div>
+                                
+                                <div class="col-sm-6" style="max-height:150px;">
+                                    <div class="col-xs-12 weather-today-details-1-class"><span id="weather-today-details-1"></span></div>
+                                    
+                                    <div class="col-xs-12 centered">
+                                     <div  class="col-xs-7 col-sm-8 weather-today-details-2-class"><span id="weather-today-details-2"></span></div>
+                                     <div class="col-xs-5 col-sm-4 weather-today-details-21-class"><span id="weather-today-details-21"></span></div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div  class="col-xs-12 weather-today-details-3-class"><span id="weather-today-details-31"></span><span id="weather-today-details-32"></span><span id="weather-today-details-33"></span></div>
+                                    </div>
+                               </div>
+                             
+                               <div id="today_fb_image">  
+                                   <!--<fb:login-button scope="public_profile,email" onlogin="checkLoginState();"></fb:login-button>-->
+                                    <img id="img_fb_icon" src="images/fb_icon.png" onclick="checkLoginState()">
+                               </div>
+                          </div>                         
+                            
+                            <div class="row">
+                                <div class="col-xs-6 col-sm-6 weather-today-background-1" id="weather_today1">Precipitation</div>
+                                <div class="col-xs-6 col-sm-6 weather-today-background-1" id="weather_today_values1"></div>
+                              </div>
+                            
+                            <div class="row">
+                                <div class="col-xs-6 col-sm-6 weather-today-background-2" id="weather_today2"><span>Chance of Rain</span></div>
+                                <div class="col-xs-6 col-sm-6 weather-today-background-2" id="weather_today_values2"></div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-xs-6 col-sm-6 weather-today-background-1" id="weather_today3"><span>Wind Speed</span></div>
+                                <div class="col-xs-6 col-sm-6 weather-today-background-1" id="weather_today_values3"></div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-xs-6 col-sm-6 weather-today-background-2" id="weather_today4"><span>Dew Point</span></div>
+                                <div class="col-xs-6 col-sm-6 weather-today-background-2" id="weather_today_values4"></div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-xs-6 col-sm-6 weather-today-background-1" id="weather_today5"><span>Humidity</span></div>
+                                <div class="col-xs-6 col-sm-6 weather-today-background-1" id="weather_today_values5"></div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-xs-6 col-sm-6 weather-today-background-2" id="weather_today6"><span>Visibility</span></div>
+                                <div class="col-xs-6 col-sm-6 weather-today-background-2" id="weather_today_values6"></div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-xs-6 col-sm-6 weather-today-background-1" id="weather_today7"><span>Sunrise</span></div>
+                                <div class="col-xs-6 col-sm-6 weather-today-background-1" id="weather_today_values7"></div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-xs-6 col-sm-6 weather-today-background-2" id="weather_today8"><span>Sunset</span></div>
+                                <div class="col-xs-6 col-sm-6 weather-today-background-2" id="weather_today_values8"></div>
+                            </div>
+                         
+                            
+                            <script>fill_right_now_weather();</script>
+                             </div>
+                       
+                
+                        <div class="col-sm-6" style="padding-right:0px; padding-left:0px;">  
+                            <div style="width:100%">    
+                                 <div class="row" id="map" style="width:100%; height:380px;"></div>                              
+                            </div>
+                        </div>    
+
+                       
+                 </div>
+                   
+                  
+            
+        
+             
+        <div class="tab-pane" id="next-24-hours">
+            <div class="col-xs-12">                    
+                <div class="row next-24-heading-row" id="next-24-heading">
+                    <div class="col-xs-5ths next-24-heading-item"><span style="word-wrap: break-word; display:block;">Time</span></div>    
+
+                    <div class="col-xs-5ths next-24-heading-item"><span style="word-wrap: break-word; display:block;">Summary</span></div>
+
+                    <div class="col-xs-5ths next-24-heading-item"><span style="word-wrap: break-word;display:block;">Cloud Cover</span></div>
+
+                    <div class="col-xs-5ths next-24-heading-item" id="next-24-hours-heading-temper"><span style="word-wrap:break-word;display:block;">Temp</span></div>
+
+                    <div class="col-xs-5ths next-24-heading-item"><span style="word-wrap: break-word;display:block;">View Details</span></div>   
+                </div>
+                
+                 <div class="row next-24-data-row-1" style="background-color: white; border-style: solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-1" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-1"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-1" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-1" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" 
+                         data-target="#row-24-more-1"></div>   
+                 </div>
+                                
+                  
+            
+                    <div id="row-24-more-1" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-1" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-1" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-1" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-1" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>           
+                                                        
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-2" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-2"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-2" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-2" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-2"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-2" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-2" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-2" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-2" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-2" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-3" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-3"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-3" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-3" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-3"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-3" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-3" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-3" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-3" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-3" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-4" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-4"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-4" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-4" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-4"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-4" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-4" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-4" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-4" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-4" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-5" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-5"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-5" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-5" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-5"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-5" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-5" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-5" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-5" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-5" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-6" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-6"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-6" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-6" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-6"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-6" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-6" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-6" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-6" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-6" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-7" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-7"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-7" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-7" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-7"></div>   
+                </div>              
+                              
+                    <div id="row-24-more-7" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-7" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-7" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-7" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-7" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-8" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-8"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-8" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-8" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-8"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-8" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-8" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-8" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-8" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-8" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-9" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-9"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-9" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-9" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-9"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-9" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-9" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-9" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-9" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-9" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-10" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-10"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-10" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-10" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-10"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-10" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-10" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-10" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-10" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-10" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-11" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-11"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-11" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-11" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-11"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-11" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-11" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-11" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-11" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-11" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-12" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-12"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-12" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-12" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-12"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-12" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-12" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-12" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-12" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-12" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-13" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-13"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-13" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-13" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-13"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-13" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-13" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-13" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-13" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-13" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-14" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-14"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-14" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-14" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-14"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-14" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-14" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-14" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-14" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-14" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-15" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-15"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-15" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-15" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-15"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-15" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-15" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-15" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-15" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-15" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-16" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-16"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-16" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-16" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-16"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-16" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-16" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-16" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-16" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-16" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-17" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-17"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-17" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-17" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-17"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-17" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-17" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-17" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-17" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-17" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-18" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-18"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-18" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-18" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-18"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-18" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-18" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-18" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-18" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-18" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-19" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-19"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-19" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-19" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue"            data-toggle="collapse" data-target="#row-24-more-19"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-19" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-19" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-19" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-19" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-19" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-20" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-20"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-20" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-20" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-20"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-20" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-20" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-20" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-20" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-20" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-21" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-21"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-21" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-21" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-21"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-21" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-21" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-21" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-21" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-21" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-22" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-22"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-22" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-22" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-22"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-22" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-22" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-22" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-22" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-22" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-23" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-23"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-23" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-23" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-23"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-23" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-23" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-23" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-23" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-23" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                <div class="row" style="background-color:white; border-style:solid; border-color:#D8D8D8; border-width: 1px 0 1px 0">
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-1-row-24" style="word-wrap: break-word; display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1"><img class="img-hourly-bounds" id="next-24-hours-item-2-row-24"/></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-3-row-24" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item next-24-list-item-alignment-1" id="next-24-hours-item-4-row-24" style="display:block;"></div>
+                    <div class="col-xs-5ths next-24-list-item-view-detail next-24-list-item-alignment-1 glyphicon glyphicon-plus glyphicon-blue" data-toggle="collapse" data-target="#row-24-more-24"></div>   
+                 </div>              
+                              
+                    <div id="row-24-more-24" class="row collapse" style="background-color:#E8E8E8; padding-top:20px; padding-right:2%; padding-left:2%;">
+                     <div class="table-responsive" style="background-color:#E8E8E8;">
+                          <table class="table">
+                            <thead style="background-color:white;">
+                              <tr>
+                                <th style="text-align:center;">Wind</th>
+                                <th style="text-align:center;">Humidity</th>
+                                <th style="text-align:center;">Visibility</th>
+                                <th style="text-align:center;">Pressure</th>                       
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td id="next-24-hours-more-item-1-row-24" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-2-row-24" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-3-row-24" style="text-align:center;"></td>
+                                <td id="next-24-hours-more-item-4-row-24" style="text-align:center;"></td>
+                              </tr>
+                            </tbody> 
+                          </table>
+                       </div> 
+                    </div>
+                
+                
+                
+                
+                
+                </div>
+                
+            </div>
+       
+            
+        <div class="tab-pane next-7-day-background-color" id="next-7-days" style="padding-top:10px">
+            <div class="col-sm-12 next-7-day-background-color">                                     
+                <div class="row" id="next-7-heading" style="padding-bottom:10px">
+                    <div class="col-sm-1 col-sm-offset-2 next-7-day-row-padding-bw next-7-day-item-style" id="next-7-days-1-row">  
+                        <div class="row next-7-day-row-in-between next-7-day-top-row-padding-top next-7-font-1" id="next-7-days-1-1"></div>
+                        <div class="row next-7-day-row-in-between next-7-font-1" id="next-7-days-1-2"></div>
+                        <div class="row next-7-day-row-in-between" id="next-7-days-1-3"><img id="next-7-days-1-3-img"/></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-1-4">Min</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-1-5"></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-1-6">Max</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-1-7"></div>
+                    </div>    
+
+                    <div class="col-sm-1 next-7-day-row-padding-bw next-7-day-item-style" id="next-7-days-2-row">
+                        <div class="row next-7-day-row-in-between next-7-day-top-row-padding-top next-7-font-1" id="next-7-days-2-1"></div>
+                        <div class="row next-7-day-row-in-between next-7-font-1" id="next-7-days-2-2"></div>
+                        <div class="row next-7-day-row-in-between" id="next-7-days-2-3"><img id="next-7-days-2-3-img"/></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-2-4">Min</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-2-5"></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-2-6">Max</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-2-7"></div>                    
+                    </div>
+
+                    <div class="col-sm-1 next-7-day-row-padding-bw next-7-day-item-style" id="next-7-days-3-row">
+                        <div class="row next-7-day-row-in-between next-7-day-top-row-padding-top next-7-font-1" id="next-7-days-3-1"></div>
+                        <div class="row next-7-day-row-in-between next-7-font-1" id="next-7-days-3-2"></div>
+                        <div class="row next-7-day-row-in-between" id="next-7-days-3-3"><img id="next-7-days-3-3-img"/></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-3-4">Min</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-3-5"></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-3-6">Max</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-3-7"></div>                    
+                    </div>
+
+                    <div class="col-sm-1 next-7-day-row-padding-bw next-7-day-item-style" id="next-7-days-4-row">
+                        <div class="row next-7-day-row-in-between next-7-day-top-row-padding-top next-7-font-1" id="next-7-days-4-1"></div>
+                        <div class="row next-7-day-row-in-between next-7-font-1" id="next-7-days-4-2"></div>
+                        <div class="row next-7-day-row-in-between" id="next-7-days-4-3"><img id="next-7-days-4-3-img"/></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-4-4">Min</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-4-5"></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-4-6">Max</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-4-7"></div>                    
+                    </div>
+
+                     <div class="col-sm-1 next-7-day-row-padding-bw next-7-day-item-style" id="next-7-days-5-row">
+                        <div class="row next-7-day-row-in-between next-7-day-top-row-padding-top next-7-font-1" id="next-7-days-5-1"></div>
+                        <div class="row next-7-day-row-in-between next-7-font-1" id="next-7-days-5-2"></div>
+                        <div class="row next-7-day-row-in-between" id="next-7-days-5-3"><img id="next-7-days-5-3-img"/></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-5-4">Min</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-5-5"></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-5-6">Max</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-5-7"></div>                    
+                    </div> 
+                    
+                     <div class="col-sm-1 next-7-day-row-padding-bw next-7-day-item-style" id="next-7-days-6-row">
+                        <div class="row next-7-day-row-in-between next-7-day-top-row-padding-top next-7-font-1" id="next-7-days-6-1"></div>
+                        <div class="row next-7-day-row-in-between next-7-font-1" id="next-7-days-6-2"></div>
+                        <div class="row next-7-day-row-in-between" id="next-7-days-6-3"><img id="next-7-days-6-3-img"/></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-6-4">Min</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-6-5"></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-6-6">Max</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-6-7"></div>                    
+                    </div>
+                    
+                     <div class="col-sm-1 next-7-day-row-padding-bw next-7-day-item-style" id="next-7-days-7-row">
+                        <div class="row next-7-day-row-in-between next-7-day-top-row-padding-top next-7-font-1" id="next-7-days-7-1"></div>
+                        <div class="row next-7-day-row-in-between next-7-font-1" id="next-7-days-7-2"></div>
+                        <div class="row next-7-day-row-in-between" id="next-7-days-7-3"><img id="next-7-days-7-3-img"/></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-7-4">Min</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-7-5"></div>
+                        <div class="row next-7-day-row-in-between-less-padding next-7-font-3" id="next-7-days-7-6">Max</div>
+                        <div class="row next-7-day-row-in-between next-7-font-3">Temp</div>
+                        <div class="row next-7-day-row-in-between next-7-font-2" id="next-7-days-7-7"></div>                    
+                    </div>
+                    
+                    <div class="modal fade" id="modal-1" role="dialog">
+                        <div class="modal-dialog">
+                          <div class="modal-content">
+                             
+                             <div class="modal-header">
+                              <button type="button" class="close" data-dismiss="modal">&times;</button>
+                              <h4 class="modal-title" id="modal-header-1"></h4>
+                             </div>
+                            
+                              <div class="modal-body" id="modal-1-body">
+                                  
+                              <img id="modal-img-1" class="center-block img-responsive"/> 
+                                  
+                                  
+                                <div class="row text-center" id="modal-data-1"><span id="modal-data-1-day"></span><span id="modal-data-1-data"></span></div>
+                                  <br>
+                                  <div class="row"> 
+                                      <div class="col-sm-12">
+                                          <div class="col-sm-4"> 
+                                            <div class="text-center font-bold padding-7-day-view-items" id="modal-sunrise-11">Sunrise Time</div>
+                                            <div class="text-center padding-7-day-view-items" id="modal-sunrise-12"></div>
+                                          </div>
+                                          
+                                          <div class="col-sm-4"> 
+                                            <div class="text-center font-bold padding-7-day-view-items" id="modal-sunset-11">Sunset Time</div>
+                                            <div class="text-center padding-7-day-view-items" id="modal-sunset-12"></div>
+                                          </div>
+                                          
+                                          <div class="col-sm-4"> 
+                                            <div class="text-center font-bold padding-7-day-view-items" id="modal-humidity-11">Humidity</div>
+                                            <div class="text-center padding-7-day-view-items-rows" id="modal-humidity-12"></div>
+                                          </div>                                          
+                                      </div> 
+                                  </div>
+                                  <br>
+                                  <div class="row"> 
+                                      <div class="col-sm-12">
+                                          <div class="col-sm-4"> 
+                                            <div class="text-center font-bold padding-7-day-view-items" id="modal-windspeed-11">Wind Speed</div>
+                                            <div class="text-center padding-7-day-view-items" id="modal-windspeed-12"></div>
+                                          </div>
+                                          
+                                          <div class="col-sm-4">  
+                                            <div class="text-center font-bold padding-7-day-view-items" id="modal-visibility-11">Visibility</div>
+                                            <div class="text-center padding-7-day-view-items" id="modal-visibility-12"></div>
+                                          </div>
+                                          
+                                          <div class="col-sm-4">
+                                            <div class="text-center font-bold padding-7-day-view-items" id="modal-pressure-11">Pressure</div>
+                                            <div class="text-center padding-7-day-view-items" id="modal-pressure-12"></div>
+                                          </div>
+                                          
+                                      </div> 
+                                  </div>
+                                 
+                              </div>
+                            
+                              <div class="modal-footer">
+                              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                              
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+              </div>      
+          </div>       
+      </div>
+    </div>
+    <noscript>    
+</body>
+</html>
+
